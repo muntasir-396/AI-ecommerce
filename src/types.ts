@@ -5,6 +5,7 @@ export interface Product {
   category: string;
   image: string;
   description: string;
+  is_available?: boolean | number;
 }
 
 export interface CartItem extends Product {

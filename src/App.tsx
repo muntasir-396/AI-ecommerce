@@ -15,12 +15,52 @@ import {
   Loader2,
   ChevronRight,
   Camera,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { Product, CartItem, ChatMessage } from './types';
 
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import AdminLayout from './admin/AdminLayout';
+import AdminDashboard from './admin/AdminDashboard';
+import AdminProducts from './admin/AdminProducts';
+import AdminCategories from './admin/AdminCategories';
+import AdminTags from './admin/AdminTags';
+import AdminOrders from './admin/AdminOrders';
+import AdminPayments from './admin/AdminPayments';
+import AdminUsers from './admin/AdminUsers';
+import AdminAnalytics from './admin/AdminAnalytics';
+import AdminDiscounts from './admin/AdminDiscounts';
+import AdminMedia from './admin/AdminMedia';
+import AdminBanners from './admin/AdminBanners';
+import AdminBlog from './admin/AdminBlog';
+import AdminReviews from './admin/AdminReviews';
+import AdminNewsletters from './admin/AdminNewsletters';
+import AdminSettings from './admin/AdminSettings';
+import AdminAccounts from './admin/AdminAccounts';
+import AdminProfile from './admin/AdminProfile';
+import AdminAuditLogs from './admin/AdminAuditLogs';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly = false }) => {
+  const { isAuthenticated, isAdmin } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (adminOnly && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const TryOnCamera = ({ product }: { product: Product }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -96,6 +136,48 @@ const TryOnCamera = ({ product }: { product: Product }) => {
 };
 
 export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="tags" element={<AdminTags />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="discounts" element={<AdminDiscounts />} />
+            <Route path="media" element={<AdminMedia />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="blog" element={<AdminBlog />} />
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="newsletters" element={<AdminNewsletters />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="admins" element={<AdminAccounts />} />
+            <Route path="audit-logs" element={<AdminAuditLogs />} />
+            <Route path="users" element={<AdminUsers />} />
+            {/* Placeholder routes for other admin pages */}
+            <Route path="*" element={<div className="p-20 text-center font-serif italic opacity-40">This administrative module is currently being refined.</div>} />
+          </Route>
+          <Route path="*" element={<MainApp />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+function MainApp() {
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -126,8 +208,9 @@ export default function App() {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data);
-        setFilteredProducts(data);
+        const availableProducts = data.filter((p: Product) => p.is_available === 1 || p.is_available === true);
+        setProducts(availableProducts);
+        setFilteredProducts(availableProducts);
       });
   }, []);
 
@@ -295,7 +378,7 @@ export default function App() {
               <ShoppingBag size={18} /> <span className="hidden lg:inline">Cart ({cart.reduce((a, b) => a + b.quantity, 0)})</span>
             </button>
             <button onClick={() => setIsProfileOpen(true)} className="nav-link flex items-center gap-2">
-              <User size={18} /> <span className="hidden lg:inline">Profile</span>
+              <User size={18} /> <span className="hidden lg:inline">{isAuthenticated ? user?.name?.split(' ')[0] : 'Profile'}</span>
             </button>
           </div>
         </div>
@@ -421,44 +504,87 @@ export default function App() {
               <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
                 {profileView === 'main' && (
                   <div className="space-y-8">
-                    <div className="flex items-center gap-6 pb-8 border-b border-black/5">
-                      <div className="w-16 h-16 rounded-full bg-brand-muted flex items-center justify-center">
-                        <User size={32} className="opacity-20" />
+                    {!isAuthenticated ? (
+                      <div className="text-center py-12 space-y-8">
+                        <div className="w-20 h-20 rounded-full bg-brand-muted flex items-center justify-center mx-auto">
+                          <User size={40} className="opacity-20" />
+                        </div>
+                        <div className="space-y-2">
+                          <h4 className="text-xl font-serif">Welcome to Zelori</h4>
+                          <p className="text-xs opacity-50 uppercase tracking-widest">Sign in to manage your orders and profile</p>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                          <Link 
+                            to="/login" 
+                            onClick={() => setIsProfileOpen(false)}
+                            className="w-full py-5 bg-black text-white text-xs uppercase tracking-[0.3em] font-bold hover:opacity-80 transition-opacity"
+                          >
+                            Sign In
+                          </Link>
+                          <Link 
+                            to="/signup" 
+                            onClick={() => setIsProfileOpen(false)}
+                            className="w-full py-5 border border-black text-black text-xs uppercase tracking-[0.3em] font-bold hover:bg-black hover:text-white transition-all"
+                          >
+                            Create Account
+                          </Link>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-lg font-bold uppercase tracking-widest">Muntasir Mamun</h4>
-                        <p className="text-xs opacity-50 tracking-widest">muntasirmamun396@gmail.com</p>
-                      </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-6 pb-8 border-b border-black/5">
+                          <div className="w-16 h-16 rounded-full bg-brand-muted flex items-center justify-center">
+                            <User size={32} className="opacity-20" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold uppercase tracking-widest">{user?.name}</h4>
+                            <p className="text-xs opacity-50 tracking-widest">{user?.email}</p>
+                          </div>
+                        </div>
 
-                    <div className="space-y-2">
-                      {[
-                        { id: 'orders', label: 'My Orders' },
-                        { id: 'wishlist', label: 'Wishlist' },
-                        { id: 'shipping', label: 'Shipping Address' },
-                        { id: 'payment', label: 'Payment Methods' },
-                        { id: 'settings', label: 'Settings' }
-                      ].map((item) => (
+                        <div className="space-y-2">
+                          {[
+                            { id: 'orders', label: 'My Orders' },
+                            { id: 'wishlist', label: 'Wishlist' },
+                            { id: 'shipping', label: 'Shipping Address' },
+                            { id: 'payment', label: 'Payment Methods' },
+                            { id: 'settings', label: 'Settings' }
+                          ].map((item) => (
+                            <button 
+                              key={item.id}
+                              onClick={() => setProfileView(item.id as any)}
+                              className="w-full text-left py-5 text-xs uppercase tracking-[0.2em] font-bold border-b border-black/5 hover:pl-4 transition-all flex items-center justify-between group"
+                            >
+                              {item.label}
+                              <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          ))}
+                        </div>
+
                         <button 
-                          key={item.id}
-                          onClick={() => setProfileView(item.id as any)}
-                          className="w-full text-left py-5 text-xs uppercase tracking-[0.2em] font-bold border-b border-black/5 hover:pl-4 transition-all flex items-center justify-between group"
+                          onClick={() => {
+                            logout();
+                            showNotification("Logged out successfully", "info");
+                            setIsProfileOpen(false);
+                          }}
+                          className="w-full py-5 bg-black text-white text-xs uppercase tracking-[0.3em] font-bold hover:opacity-80 transition-opacity mt-8"
                         >
-                          {item.label}
-                          <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                          Sign Out
                         </button>
-                      ))}
-                    </div>
 
-                    <button 
-                      onClick={() => {
-                        showNotification("Logged out successfully", "info");
-                        setIsProfileOpen(false);
-                      }}
-                      className="w-full py-5 bg-black text-white text-xs uppercase tracking-[0.3em] font-bold hover:opacity-80 transition-opacity mt-8"
-                    >
-                      Sign Out
-                    </button>
+                        {isAdmin && (
+                          <div className="pt-8 border-t border-black/5">
+                            <Link 
+                              to="/admin/dashboard"
+                              onClick={() => setIsProfileOpen(false)}
+                              className="flex items-center justify-center gap-3 w-full py-4 border border-admin-gold text-admin-gold text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-admin-gold hover:text-white transition-all"
+                            >
+                              <ShieldCheck size={16} /> Admin Portal
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
 
