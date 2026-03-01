@@ -1,0 +1,5 @@
+{
+  "name": "Vogue & Verve",
+  "description": "A premium full-stack fashion ecommerce experience with AI-powered styling advice.",
+  "requestFramePermissions": ["camera"]
+}
