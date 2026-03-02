@@ -123,7 +123,7 @@ const AdminProducts: React.FC = () => {
           </button>
           <button 
             onClick={() => {
-              setEditingProduct({ name: '', price: 0, category: 'Dresses', image: '', description: '' });
+              setEditingProduct({ name: '', price: 0, category: 'Dresses', image: '', video: '', description: '' });
               setIsAddPanelOpen(true);
             }}
             className="flex items-center gap-2 px-8 py-4 bg-admin-gold text-admin-bg text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-admin-gold/90 transition-all shadow-[0_0_20px_rgba(201,168,76,0.2)]"
@@ -448,6 +448,16 @@ const AdminProducts: React.FC = () => {
                           onChange={(e) => setEditingProduct(prev => ({ ...prev!, image: e.target.value }))}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Video URL (Optional)</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://player.vimeo.com/external/..." 
+                          value={editingProduct?.video || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, video: e.target.value }))}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Description</label>
@@ -467,18 +477,39 @@ const AdminProducts: React.FC = () => {
                     <ImageIcon size={18} className="text-admin-gold" />
                     <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-admin-gold">Media Preview</h4>
                   </div>
-                  {editingProduct?.image ? (
-                    <div className="relative aspect-[3/4] w-48 mx-auto border border-admin-gold/20 overflow-hidden">
-                      <img src={editingProduct.image} alt="Preview" className="w-full h-full object-cover" />
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Primary Image</p>
+                      {editingProduct?.image ? (
+                        <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden">
+                          <img src={editingProduct.image} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="aspect-[3/4] border-2 border-dashed border-admin-gold/10 flex items-center justify-center text-center p-4 bg-black/10">
+                          <p className="text-[8px] uppercase tracking-[0.3em] font-bold text-admin-gold/40">No Image</p>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-admin-gold/10 p-16 text-center hover:border-admin-gold/40 transition-all cursor-pointer group bg-black/10">
-                      <div className="w-16 h-16 rounded-full bg-admin-gold/5 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <Plus size={32} className="text-admin-gold/40 group-hover:text-admin-gold transition-colors" />
-                      </div>
-                      <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-admin-gold/60">Enter an image URL above to see preview</p>
+                    <div className="space-y-4">
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Cinematic Video</p>
+                      {editingProduct?.video ? (
+                        <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden bg-black">
+                          <video 
+                            src={editingProduct.video} 
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-[3/4] border-2 border-dashed border-admin-gold/10 flex items-center justify-center text-center p-4 bg-black/10">
+                          <p className="text-[8px] uppercase tracking-[0.3em] font-bold text-admin-gold/40">No Video</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </section>
 
                 {/* Section 3: Pricing */}

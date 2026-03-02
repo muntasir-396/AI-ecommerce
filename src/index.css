@@ -45,7 +45,16 @@
 }
 
 .nav-link {
-  @apply text-[11px] uppercase tracking-[0.2em] font-bold hover:opacity-50 transition-opacity;
+  @apply text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-500 relative py-1;
+}
+
+.nav-link::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-500;
+}
+
+.nav-link:hover::after {
+  @apply w-full;
 }
 
 /* Admin Specific Styles */

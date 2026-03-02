@@ -16,7 +16,9 @@ import {
   ChevronRight,
   Camera,
   CheckCircle2,
-  ShieldCheck
+  ShieldCheck,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { Product, CartItem, ChatMessage } from './types';
@@ -44,6 +46,7 @@ import AdminAuditLogs from './admin/AdminAuditLogs';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { cn } from './lib/utils';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -204,14 +207,37 @@ function MainApp() {
   const productsRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLElement>(null);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const [isMuted, setIsMuted] = useState(true);
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(!isMuted);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
       .then(data => {
-        const availableProducts = data.filter((p: Product) => p.is_available === 1 || p.is_available === true);
+        const availableProducts = data.filter((p: Product) => 
+          p.is_available === 1 || 
+          p.is_available === true || 
+          p.is_available === undefined || 
+          p.is_available === null
+        );
         setProducts(availableProducts);
         setFilteredProducts(availableProducts);
-      });
+      })
+      .catch(err => console.error('Fetch error:', err));
   }, []);
 
   useEffect(() => {
@@ -342,13 +368,16 @@ function MainApp() {
       </AnimatePresence>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5">
-        <div className="max-w-[1800px] mx-auto px-8 h-24 flex items-center justify-between">
+      <nav className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-700 h-16 md:h-24 flex items-center",
+        isScrolled ? "bg-white/90 backdrop-blur-md border-b border-black/5" : "bg-transparent border-transparent"
+      )}>
+        <div className="max-w-[1800px] w-full mx-auto px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-12">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2">
+            <button onClick={() => setIsMobileMenuOpen(true)} className={cn("md:hidden p-2", !isScrolled && !selectedProduct ? "text-white" : "text-black")}>
               <Menu size={24} />
             </button>
-            <div className="hidden md:flex items-center gap-8">
+            <div className={cn("hidden md:flex items-center gap-8", !isScrolled && !selectedProduct ? "text-white" : "text-black")}>
               <button onClick={() => { setActiveCategory('Outerwear'); scrollToProducts(); }} className="nav-link">New</button>
               <button onClick={() => { setActiveCategory('All'); scrollToProducts(); }} className="nav-link">Women</button>
               <button onClick={() => { setActiveCategory('All'); scrollToProducts(); }} className="nav-link">Men</button>
@@ -356,16 +385,27 @@ function MainApp() {
             </div>
           </div>
           
-          <h1 onClick={() => { setSelectedProduct(null); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="text-3xl font-serif font-bold tracking-[0.15em] cursor-pointer absolute left-1/2 -translate-x-1/2">VOGUE & VERVE</h1>
+          <h1 
+            onClick={() => { setSelectedProduct(null); window.scrollTo({top: 0, behavior: 'smooth'}); }} 
+            className={cn(
+              "text-xl md:text-3xl font-serif font-bold tracking-[0.15em] cursor-pointer absolute left-1/2 -translate-x-1/2 transition-colors duration-700 whitespace-nowrap",
+              !isScrolled && !selectedProduct ? "text-white" : "text-black"
+            )}
+          >
+            VOGUE & VERVE
+          </h1>
           
-          <div className="flex items-center gap-8">
+          <div className={cn("flex items-center gap-4 md:gap-8", !isScrolled && !selectedProduct ? "text-white" : "text-black")}>
             <div className={`hidden lg:flex items-center transition-all duration-300 ${isSearchOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
               <input 
                 type="text" 
                 placeholder="Search..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-b border-black/20 px-2 py-1 text-xs uppercase tracking-widest focus:outline-none focus:border-black"
+                className={cn(
+                  "w-full bg-transparent border-b px-2 py-1 text-xs uppercase tracking-widest focus:outline-none transition-all",
+                  !isScrolled && !selectedProduct ? "border-white/20 focus:border-white text-white" : "border-black/20 focus:border-black text-black"
+                )}
               />
             </div>
             <button 
@@ -375,10 +415,10 @@ function MainApp() {
               <Search size={18} /> <span className="hidden lg:inline">Search</span>
             </button>
             <button onClick={() => setIsCartOpen(true)} className="nav-link flex items-center gap-2">
-              <ShoppingBag size={18} /> <span className="hidden lg:inline">Cart ({cart.reduce((a, b) => a + b.quantity, 0)})</span>
+              <ShoppingBag size={18} /> <span className="hidden lg:inline text-[10px] uppercase tracking-widest font-bold">Cart ({cart.reduce((a, b) => a + b.quantity, 0)})</span>
             </button>
             <button onClick={() => setIsProfileOpen(true)} className="nav-link flex items-center gap-2">
-              <User size={18} /> <span className="hidden lg:inline">{isAuthenticated ? user?.name?.split(' ')[0] : 'Profile'}</span>
+              <User size={18} /> <span className="hidden lg:inline text-[10px] uppercase tracking-widest font-bold">{isAuthenticated ? user?.name?.split(' ')[0] : 'Profile'}</span>
             </button>
           </div>
         </div>
@@ -714,7 +754,7 @@ function MainApp() {
         )}
       </AnimatePresence>
 
-      <main className="flex-grow pt-24">
+      <main className="flex-grow">
         <AnimatePresence mode="wait">
           {!selectedProduct ? (
             <motion.div
@@ -723,50 +763,118 @@ function MainApp() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Hero Section - Full Screen Cinematic */}
-              <section className="relative h-[90vh] overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000" 
-                  alt="Hero"
+              {/* Hero Section - Full Screen Cinematic Video */}
+              <section className="relative h-screen overflow-hidden">
+                <video 
+                  autoPlay 
+                  loop 
+                  muted={isMuted}
+                  playsInline
                   className="absolute inset-0 w-full h-full object-cover scale-105"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 flex flex-col items-center justify-end pb-24">
+                >
+                  <source src="https://player.vimeo.com/external/494192677.hd.mp4?s=99874c6e127f60b0ff5671cf5760163416d8d8e9&profile_id=175" type="video/mp4" />
+                </video>
+                
+                {/* Mute Toggle */}
+                <button 
+                  onClick={toggleMute}
+                  className="absolute bottom-12 right-12 z-20 p-4 border border-white/20 rounded-full text-white hover:bg-white hover:text-black transition-all duration-500"
+                >
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                </button>
+                <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
                   <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.2 }}
-                    className="text-center text-white"
+                    transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-center"
                   >
-                    <h2 className="text-7xl md:text-9xl font-serif mb-12 tracking-tight leading-none">The New <br/><span className="italic">Elegance</span></h2>
-                    <div className="flex gap-6 justify-center">
+                    <span className="uppercase tracking-[0.6em] text-[10px] font-bold mb-8 block opacity-80">Spring Summer 2026</span>
+                    <h2 className="text-5xl md:text-[10rem] font-serif mb-12 tracking-tighter leading-[0.85] font-light">
+                      The New <br/>
+                      <span className="italic font-normal">Elegance</span>
+                    </h2>
+                    <div className="flex flex-col md:flex-row gap-6 justify-center items-center mt-12">
                       <button 
                         onClick={scrollToProducts}
-                        className="bg-white text-black px-12 py-5 uppercase tracking-[0.2em] text-xs font-bold hover:bg-black hover:text-white transition-all duration-500"
+                        className="group relative px-12 py-5 overflow-hidden"
                       >
-                        Explore the Collection
+                        <div className="absolute inset-0 bg-white transition-transform duration-500 group-hover:scale-105" />
+                        <span className="relative text-black text-[10px] uppercase tracking-[0.4em] font-bold">Explore the Collection</span>
+                      </button>
+                      <button 
+                        className="text-white text-[10px] uppercase tracking-[0.4em] font-bold border-b border-white/30 pb-2 hover:border-white transition-all"
+                      >
+                        Watch the Film
                       </button>
                     </div>
                   </motion.div>
                 </div>
+
+                {/* Scroll Indicator */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 2, duration: 1 }}
+                  className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+                >
+                  <div className="w-[1px] h-12 bg-gradient-to-b from-white to-transparent" />
+                  <span className="text-[8px] uppercase tracking-[0.5em] text-white/40 font-bold">Scroll</span>
+                </motion.div>
               </section>
 
               {/* Maison Highlight - Split Layout */}
               <section className="grid grid-cols-1 md:grid-cols-2 h-screen">
-                <div className="relative overflow-hidden group">
-                  <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt="Women" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-black/10 flex flex-col items-center justify-center text-white">
-                    <h3 className="text-5xl font-serif mb-8">Women's Universe</h3>
-                    <button onClick={() => { setActiveCategory('Dresses'); scrollToProducts(); }} className="border border-white px-10 py-4 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition-all">Discover</button>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  className="relative overflow-hidden group"
+                >
+                  <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Women" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center text-white p-12 text-center">
+                    <motion.div
+                      initial={{ y: 30, opacity: 0 }}
+                      whileInView={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 1, delay: 0.2 }}
+                    >
+                      <span className="uppercase tracking-[0.5em] text-[10px] font-bold mb-6 block">The Collection</span>
+                      <h3 className="text-6xl font-serif mb-10 italic">Women's Universe</h3>
+                      <button 
+                        onClick={() => { setActiveCategory('Dresses'); scrollToProducts(); }} 
+                        className="group relative px-10 py-4 overflow-hidden border border-white"
+                      >
+                        <div className="absolute inset-0 bg-white translate-y-full transition-transform duration-500 group-hover:translate-y-0" />
+                        <span className="relative text-white group-hover:text-black text-[10px] uppercase tracking-widest font-bold transition-colors duration-500">Discover</span>
+                      </button>
+                    </motion.div>
                   </div>
-                </div>
-                <div className="relative overflow-hidden group">
-                  <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt="Men" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-black/10 flex flex-col items-center justify-center text-white">
-                    <h3 className="text-5xl font-serif mb-8">Men's Universe</h3>
-                    <button onClick={() => { setActiveCategory('Outerwear'); scrollToProducts(); }} className="border border-white px-10 py-4 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition-all">Discover</button>
+                </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  className="relative overflow-hidden group"
+                >
+                  <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Men" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center text-white p-12 text-center">
+                    <motion.div
+                      initial={{ y: 30, opacity: 0 }}
+                      whileInView={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 1, delay: 0.4 }}
+                    >
+                      <span className="uppercase tracking-[0.5em] text-[10px] font-bold mb-6 block">The Collection</span>
+                      <h3 className="text-6xl font-serif mb-10 italic">Men's Universe</h3>
+                      <button 
+                        onClick={() => { setActiveCategory('Outerwear'); scrollToProducts(); }} 
+                        className="group relative px-10 py-4 overflow-hidden border border-white"
+                      >
+                        <div className="absolute inset-0 bg-white translate-y-full transition-transform duration-500 group-hover:translate-y-0" />
+                        <span className="relative text-white group-hover:text-black text-[10px] uppercase tracking-widest font-bold transition-colors duration-500">Discover</span>
+                      </button>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </section>
 
               {/* Product Grid - Refined */}
@@ -831,36 +939,70 @@ function MainApp() {
           ) : (
             <motion.div
               key="detail"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="max-w-7xl mx-auto px-6 py-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="max-w-7xl mx-auto px-6 pt-32 pb-24"
             >
-              <button 
-                onClick={() => setSelectedProduct(null)}
-                className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity mb-12"
-              >
-                <ArrowRight size={16} className="rotate-180" /> Back to Collection
-              </button>
+              <div className="flex items-center justify-between mb-12">
+                <button 
+                  onClick={() => setSelectedProduct(null)}
+                  className="flex items-center gap-3 text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 hover:opacity-100 transition-all group"
+                >
+                  <ArrowRight size={14} className="rotate-180 group-hover:-translate-x-1 transition-transform" /> 
+                  Back to Collection
+                </button>
+                
+                <div className="flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">
+                  <span>Home</span>
+                  <span className="opacity-20">/</span>
+                  <span>{selectedProduct.category}</span>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
                 {/* Product Images */}
                 <div className="space-y-8">
-                  <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted">
-                    <img 
-                      src={selectedProduct.image} 
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
+                  <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted relative">
+                    {selectedProduct.video ? (
+                      <video 
+                        src={selectedProduct.video} 
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img 
+                        src={selectedProduct.image} 
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
+                    {selectedProduct.video && (
+                      <div className="absolute top-6 right-6 bg-black/40 backdrop-blur-md px-4 py-2 text-[8px] uppercase tracking-[0.3em] font-bold text-white border border-white/10">
+                        Cinematic View
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-8">
-                    <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+                    <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted opacity-50 hover:opacity-100 transition-opacity cursor-pointer border border-black/5">
                        <img src={selectedProduct.image} alt="Detail 1" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
-                    <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
-                       <img src={selectedProduct.image} alt="Detail 2" className="w-full h-full object-cover grayscale" referrerPolicy="no-referrer" />
-                    </div>
+                    {selectedProduct.video ? (
+                      <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted opacity-50 hover:opacity-100 transition-opacity cursor-pointer border border-black/5 relative group">
+                         <video src={selectedProduct.video} className="w-full h-full object-cover" muted playsInline />
+                         <div className="absolute inset-0 flex items-center justify-center">
+                            <Sparkles size={24} className="text-white opacity-40 group-hover:opacity-100 transition-opacity" />
+                         </div>
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/5] rounded-none overflow-hidden bg-brand-muted opacity-50 hover:opacity-100 transition-opacity cursor-pointer border border-black/5">
+                         <img src={selectedProduct.image} alt="Detail 2" className="w-full h-full object-cover grayscale" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -915,27 +1057,9 @@ function MainApp() {
                   </div>
                   
                   <div className="mt-6">
-                    <button 
-                      onClick={() => setIsTryOnOpen(true)}
-                      className="w-full border border-brand-accent text-brand-accent py-5 rounded-none uppercase tracking-[0.2em] text-xs font-bold hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-3"
-                    >
-                      <Camera size={16} /> Virtual Try On
+                    <button className="w-full py-5 border border-black/10 text-black text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-black hover:text-white transition-all">
+                      Wishlist
                     </button>
-                  </div>
-
-                  <div className="mt-16 grid grid-cols-3 gap-8 pt-8 border-t border-black/5">
-                    <div className="text-center">
-                      <p className="text-[10px] uppercase tracking-widest font-bold mb-2">Material</p>
-                      <p className="text-xs opacity-60">100% Premium</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[10px] uppercase tracking-widest font-bold mb-2">Origin</p>
-                      <p className="text-xs opacity-60">Italy</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[10px] uppercase tracking-widest font-bold mb-2">Care</p>
-                      <p className="text-xs opacity-60">Dry Clean Only</p>
-                    </div>
                   </div>
                 </div>
               </div>

@@ -17,10 +17,29 @@ db.exec(`
     price REAL NOT NULL,
     category TEXT NOT NULL,
     image TEXT NOT NULL,
+    video TEXT,
     description TEXT,
     is_available INTEGER DEFAULT 1
   );
 
+  -- Migration: Add columns if they don't exist
+`);
+
+try {
+  db.exec("ALTER TABLE products ADD COLUMN is_available INTEGER DEFAULT 1");
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE products ADD COLUMN video TEXT");
+} catch (e) {}
+
+db.prepare("UPDATE products SET is_available = 1 WHERE is_available IS NULL").run();
+
+// Ensure all existing products are available if they were accidentally set to 0
+db.prepare("UPDATE products SET is_available = 1 WHERE is_available IS NULL").run();
+// Optional: db.prepare("UPDATE products SET is_available = 1").run(); // Uncomment if you want to force all to be visible once
+
+db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_email TEXT NOT NULL,
@@ -109,17 +128,17 @@ async function startServer() {
   });
 
   app.post("/api/products", (req, res) => {
-    const { name, price, category, image, description, is_available } = req.body;
-    const info = db.prepare("INSERT INTO products (name, price, category, image, description, is_available) VALUES (?, ?, ?, ?, ?, ?)")
-      .run(name, price, category, image, description, is_available ? 1 : 0);
+    const { name, price, category, image, video, description, is_available } = req.body;
+    const info = db.prepare("INSERT INTO products (name, price, category, image, video, description, is_available) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(name, price, category, image, video || null, description, is_available === false ? 0 : 1);
     res.json({ success: true, id: info.lastInsertRowid });
   });
 
   app.put("/api/products/:id", (req, res) => {
     const { id } = req.params;
-    const { name, price, category, image, description, is_available } = req.body;
-    db.prepare("UPDATE products SET name = ?, price = ?, category = ?, image = ?, description = ?, is_available = ? WHERE id = ?")
-      .run(name, price, category, image, description, is_available ? 1 : 0, id);
+    const { name, price, category, image, video, description, is_available } = req.body;
+    db.prepare("UPDATE products SET name = ?, price = ?, category = ?, image = ?, video = ?, description = ?, is_available = ? WHERE id = ?")
+      .run(name, price, category, image, video || null, description, is_available === false ? 0 : 1, id);
     res.json({ success: true });
   });
 

@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   category: string;
   image: string;
+  video?: string;
   description: string;
   is_available?: boolean | number;
 }
