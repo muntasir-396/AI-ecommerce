@@ -35,7 +35,7 @@ const mockLogs: AuditLog[] = [
   { id: 5, timestamp: '2024-05-20 09:30:15', user: { name: 'Editor Sarah' }, action: 'Updated Category "Evening Wear"', ip: '192.168.1.45', severity: 'Info', details: 'Modified SEO meta description' },
   { id: 6, timestamp: '2024-05-19 23:55:00', user: { name: 'System' }, action: 'Database Backup Completed', ip: 'localhost', severity: 'Info', details: 'Backup size: 2.4 GB' },
   { id: 7, timestamp: '2024-05-19 21:20:12', user: { name: 'Admin Tom' }, action: 'Changed User Role: Julianne Moore', ip: '192.168.1.1', severity: 'Warning', details: 'Role upgraded from Customer to VIP' },
-  { id: 8, timestamp: '2024-05-19 18:10:45', user: { name: 'System' }, action: 'API Key Rotated', ip: 'internal', severity: 'Danger', details: 'Stripe Live Secret Key updated' },
+  { id: 8, timestamp: '2024-05-19 18:10:45', user: { name: 'System' }, action: 'Security Vault Updated', ip: 'internal', severity: 'Danger', details: 'System security parameters recalibrated' },
 ];
 
 const AdminAuditLogs: React.FC = () => {

@@ -48,7 +48,7 @@ import Signup from './pages/Signup';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { cn } from './lib/utils';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -335,8 +335,8 @@ function MainApp() {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: newMessages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+        model: "gemini-2.5-flash-preview",
+        contents: newMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] })),
         config: {
           systemInstruction: "You are a high-end fashion stylist for 'Vogue & Verve', a luxury ecommerce brand. Your tone is sophisticated, helpful, and trend-aware. Recommend products from the catalog if relevant. The catalog includes: Midnight Velvet Blazer ($249.99), Silk Slip Dress ($189.00), Cashmere Turtleneck ($159.50), Tailored Wool Trousers ($129.00), Leather Chelsea Boots ($210.00), Oversized Linen Shirt ($89.00)."
         }
@@ -344,7 +344,9 @@ function MainApp() {
       
       setChatMessages([...newMessages, { role: 'model', text: response.text || "I'm sorry, I couldn't process that. How else can I assist your style journey?" }]);
     } catch (error) {
-      console.error(error);
+      console.error("Gemini Error:", error);
+      // Fallback if API fails or key is missing
+      setChatMessages([...newMessages, { role: 'model', text: "I'm currently offline, but I'd love to help you with your style journey. Please check back soon!" }]);
     } finally {
       setIsTyping(false);
     }
@@ -1056,7 +1058,13 @@ function MainApp() {
                     </button>
                   </div>
                   
-                  <div className="mt-6">
+                  <div className="mt-6 space-y-4">
+                    <button 
+                      onClick={() => setIsTryOnOpen(true)}
+                      className="w-full py-5 border border-brand-accent text-brand-accent text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-3"
+                    >
+                      <Camera size={16} /> Virtual Try On
+                    </button>
                     <button className="w-full py-5 border border-black/10 text-black text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-black hover:text-white transition-all">
                       Wishlist
                     </button>

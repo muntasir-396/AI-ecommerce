@@ -162,23 +162,7 @@ const AdminSettings: React.FC = () => {
                       <button className="text-[10px] uppercase tracking-widest font-bold text-admin-danger hover:underline">Disconnect</button>
                     </div>
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Live Secret Key</label>
-                        <div className="relative">
-                          <input 
-                            type={showApiKey ? "text" : "password"} 
-                            value="sk_live_51MvX..." 
-                            readOnly 
-                            className="w-full bg-black/40 border border-admin-gold/10 px-5 py-4 text-sm font-mono focus:outline-none" 
-                          />
-                          <button 
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-admin-gold/40 hover:text-admin-gold"
-                          >
-                            {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
+                      <p className="text-[10px] uppercase tracking-widest opacity-30 italic">Payment configuration is managed via the secure vault.</p>
                     </div>
                   </div>
 
