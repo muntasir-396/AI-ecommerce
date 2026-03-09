@@ -19,6 +19,8 @@ db.exec(`
     image TEXT NOT NULL,
     video TEXT,
     description TEXT,
+    color TEXT,
+    size TEXT,
     is_available INTEGER DEFAULT 1
   );
 
@@ -32,6 +34,38 @@ try {
 try {
   db.exec("ALTER TABLE products ADD COLUMN video TEXT");
 } catch (e) {}
+
+try {
+  db.exec("ALTER TABLE products ADD COLUMN color TEXT");
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE products ADD COLUMN size TEXT");
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE products ADD COLUMN image2 TEXT");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE products ADD COLUMN image3 TEXT");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE products ADD COLUMN image4 TEXT");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE products ADD COLUMN image5 TEXT");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE products ADD COLUMN video2 TEXT");
+} catch (e) {}
+
+// Update existing products with default colors and sizes if they are empty
+db.prepare("UPDATE products SET color = 'Black', size = 'S,M,L,XL' WHERE name = 'Midnight Velvet Blazer' AND color IS NULL").run();
+db.prepare("UPDATE products SET color = 'Champagne', size = 'XS,S,M,L' WHERE name = 'Silk Slip Dress' AND color IS NULL").run();
+db.prepare("UPDATE products SET color = 'Camel', size = 'S,M,L,XL' WHERE name = 'Cashmere Turtleneck' AND color IS NULL").run();
+db.prepare("UPDATE products SET color = 'Grey', size = '30,32,34,36' WHERE name = 'Tailored Wool Trousers' AND color IS NULL").run();
+db.prepare("UPDATE products SET color = 'Brown', size = '8,9,10,11,12' WHERE name = 'Leather Chelsea Boots' AND color IS NULL").run();
+db.prepare("UPDATE products SET color = 'White', size = 'S,M,L,XL,XXL' WHERE name = 'Oversized Linen Shirt' AND color IS NULL").run();
 
 db.prepare("UPDATE products SET is_available = 1 WHERE is_available IS NULL").run();
 
@@ -61,14 +95,14 @@ db.exec(`
 // Seed data if empty
 const productCount = db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number };
 if (productCount.count === 0) {
-  const insert = db.prepare("INSERT INTO products (name, price, category, image, description, is_available) VALUES (?, ?, ?, ?, ?, ?)");
+  const insert = db.prepare("INSERT INTO products (name, price, category, image, description, is_available, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
   const products = [
-    ["Midnight Velvet Blazer", 249.99, "Outerwear", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=800", "A luxurious velvet blazer for evening elegance.", 1],
-    ["Silk Slip Dress", 189.00, "Dresses", "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=800", "Effortless sophistication in pure mulberry silk.", 1],
-    ["Cashmere Turtleneck", 159.50, "Knitwear", "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800", "Ultra-soft cashmere for timeless warmth.", 1],
-    ["Tailored Wool Trousers", 129.00, "Bottoms", "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800", "Precision-cut trousers in premium Italian wool.", 1],
-    ["Leather Chelsea Boots", 210.00, "Footwear", "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&q=80&w=800", "Classic silhouette with modern durability.", 1],
-    ["Oversized Linen Shirt", 89.00, "Tops", "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&q=80&w=800", "Breathable linen for relaxed summer days.", 1]
+    ["Midnight Velvet Blazer", 249.99, "Outerwear", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=800", "A luxurious velvet blazer for evening elegance.", 1, "Black", "S,M,L,XL"],
+    ["Silk Slip Dress", 189.00, "Dresses", "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=800", "Effortless sophistication in pure mulberry silk.", 1, "Champagne", "XS,S,M,L"],
+    ["Cashmere Turtleneck", 159.50, "Knitwear", "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800", "Ultra-soft cashmere for timeless warmth.", 1, "Camel", "S,M,L,XL"],
+    ["Tailored Wool Trousers", 129.00, "Bottoms", "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800", "Precision-cut trousers in premium Italian wool.", 1, "Grey", "30,32,34,36"],
+    ["Leather Chelsea Boots", 210.00, "Footwear", "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&q=80&w=800", "Classic silhouette with modern durability.", 1, "Brown", "8,9,10,11,12"],
+    ["Oversized Linen Shirt", 89.00, "Tops", "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&q=80&w=800", "Breathable linen for relaxed summer days.", 1, "White", "S,M,L,XL,XXL"]
   ];
   products.forEach(p => insert.run(...p));
 }
@@ -128,17 +162,17 @@ async function startServer() {
   });
 
   app.post("/api/products", (req, res) => {
-    const { name, price, category, image, video, description, is_available } = req.body;
-    const info = db.prepare("INSERT INTO products (name, price, category, image, video, description, is_available) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(name, price, category, image, video || null, description, is_available === false ? 0 : 1);
+    const { name, price, category, image, image2, image3, image4, image5, video, video2, description, is_available } = req.body;
+    const info = db.prepare("INSERT INTO products (name, price, category, image, image2, image3, image4, image5, video, video2, description, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(name, price, category, image, image2 || null, image3 || null, image4 || null, image5 || null, video || null, video2 || null, description, is_available === false ? 0 : 1);
     res.json({ success: true, id: info.lastInsertRowid });
   });
 
   app.put("/api/products/:id", (req, res) => {
     const { id } = req.params;
-    const { name, price, category, image, video, description, is_available } = req.body;
-    db.prepare("UPDATE products SET name = ?, price = ?, category = ?, image = ?, video = ?, description = ?, is_available = ? WHERE id = ?")
-      .run(name, price, category, image, video || null, description, is_available === false ? 0 : 1, id);
+    const { name, price, category, image, image2, image3, image4, image5, video, video2, description, is_available } = req.body;
+    db.prepare("UPDATE products SET name = ?, price = ?, category = ?, image = ?, image2 = ?, image3 = ?, image4 = ?, image5 = ?, video = ?, video2 = ?, description = ?, is_available = ? WHERE id = ?")
+      .run(name, price, category, image, image2 || null, image3 || null, image4 || null, image5 || null, video || null, video2 || null, description, is_available === false ? 0 : 1, id);
     res.json({ success: true });
   });
 

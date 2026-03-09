@@ -439,7 +439,7 @@ const AdminProducts: React.FC = () => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL</label>
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL 1 (Primary)</label>
                         <input 
                           type="text" 
                           className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
@@ -449,13 +449,63 @@ const AdminProducts: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Video URL (Optional)</label>
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL 2</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://images.unsplash.com/..." 
+                          value={editingProduct?.image2 || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, image2: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL 3</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://images.unsplash.com/..." 
+                          value={editingProduct?.image3 || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, image3: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL 4</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://images.unsplash.com/..." 
+                          value={editingProduct?.image4 || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, image4: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Image URL 5</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://images.unsplash.com/..." 
+                          value={editingProduct?.image5 || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, image5: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Video URL 1 (Cinematic)</label>
                         <input 
                           type="text" 
                           className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
                           placeholder="https://player.vimeo.com/external/..." 
                           value={editingProduct?.video || ''}
                           onChange={(e) => setEditingProduct(prev => ({ ...prev!, video: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Video URL 2</label>
+                        <input 
+                          type="text" 
+                          className="w-full bg-black/20 border border-admin-gold/10 px-5 py-4 text-sm focus:outline-none focus:border-admin-gold transition-all" 
+                          placeholder="https://player.vimeo.com/external/..." 
+                          value={editingProduct?.video2 || ''}
+                          onChange={(e) => setEditingProduct(prev => ({ ...prev!, video2: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -477,9 +527,9 @@ const AdminProducts: React.FC = () => {
                     <ImageIcon size={18} className="text-admin-gold" />
                     <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-admin-gold">Media Preview</h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-8">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                     <div className="space-y-4">
-                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Primary Image</p>
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Image 1</p>
                       {editingProduct?.image ? (
                         <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden">
                           <img src={editingProduct.image} alt="Preview" className="w-full h-full object-cover" />
@@ -491,11 +541,42 @@ const AdminProducts: React.FC = () => {
                       )}
                     </div>
                     <div className="space-y-4">
-                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Cinematic Video</p>
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Image 2</p>
+                      {editingProduct?.image2 ? (
+                        <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden">
+                          <img src={editingProduct.image2} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="aspect-[3/4] border-2 border-dashed border-admin-gold/10 flex items-center justify-center text-center p-4 bg-black/10">
+                          <p className="text-[8px] uppercase tracking-[0.3em] font-bold text-admin-gold/40">No Image</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Video 1</p>
                       {editingProduct?.video ? (
                         <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden bg-black">
                           <video 
                             src={editingProduct.video} 
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-[3/4] border-2 border-dashed border-admin-gold/10 flex items-center justify-center text-center p-4 bg-black/10">
+                          <p className="text-[8px] uppercase tracking-[0.3em] font-bold text-admin-gold/40">No Video</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-[8px] uppercase tracking-widest font-bold opacity-30 text-center">Video 2</p>
+                      {editingProduct?.video2 ? (
+                        <div className="relative aspect-[3/4] w-full border border-admin-gold/20 overflow-hidden bg-black">
+                          <video 
+                            src={editingProduct.video2} 
                             autoPlay 
                             loop 
                             muted 

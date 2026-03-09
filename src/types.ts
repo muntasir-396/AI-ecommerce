@@ -4,8 +4,15 @@ export interface Product {
   price: number;
   category: string;
   image: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
+  image5?: string;
   video?: string;
+  video2?: string;
   description: string;
+  color?: string;
+  size?: string;
   is_available?: boolean | number;
 }
 

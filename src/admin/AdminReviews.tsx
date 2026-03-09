@@ -40,8 +40,13 @@ const mockReviews: Review[] = [
 ];
 
 const AdminReviews: React.FC = () => {
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const updateStatus = (id: number, newStatus: 'Approved' | 'Pending' | 'Spam') => {
+    setReviews(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+  };
 
   return (
     <div className="space-y-8 p-8 max-w-[1600px] mx-auto">
@@ -113,7 +118,7 @@ const AdminReviews: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-admin-gold/5">
-              {mockReviews.map((review, idx) => (
+              {reviews.map((review, idx) => (
                 <motion.tr 
                   key={review.id}
                   initial={{ opacity: 0, x: -10 }}
@@ -166,14 +171,42 @@ const AdminReviews: React.FC = () => {
                   </td>
                   <td className="p-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setSelectedReview(review)} className="p-2 hover:bg-admin-gold/10 text-admin-gold/40 hover:text-admin-gold transition-all" title="View Details">
+                      <button 
+                        onClick={() => setSelectedReview(review)} 
+                        className="p-2 hover:bg-admin-gold/10 text-admin-gold/40 hover:text-admin-gold transition-all" 
+                        title="View Details"
+                      >
                         <Eye size={16} />
                       </button>
-                      <button className="p-2 hover:bg-admin-gold/10 text-admin-gold/40 hover:text-admin-gold transition-all">
+                      <button 
+                        onClick={() => updateStatus(review.id, 'Approved')}
+                        className={cn(
+                          "p-2 hover:bg-admin-success/10 transition-all",
+                          review.status === 'Approved' ? "text-admin-success" : "text-admin-gold/40 hover:text-admin-success"
+                        )}
+                        title="Approve Review"
+                      >
                         <CheckCircle2 size={16} />
                       </button>
-                      <button className="p-2 hover:bg-admin-gold/10 text-admin-gold/40 hover:text-admin-gold transition-all">
-                        <MoreVertical size={16} />
+                      <button 
+                        onClick={() => updateStatus(review.id, 'Pending')}
+                        className={cn(
+                          "p-2 hover:bg-admin-warning/10 transition-all",
+                          review.status === 'Pending' ? "text-admin-warning" : "text-admin-gold/40 hover:text-admin-warning"
+                        )}
+                        title="Reject / Set to Pending"
+                      >
+                        <XCircle size={16} />
+                      </button>
+                      <button 
+                        onClick={() => updateStatus(review.id, 'Spam')}
+                        className={cn(
+                          "p-2 hover:bg-admin-danger/10 transition-all",
+                          review.status === 'Spam' ? "text-admin-danger" : "text-admin-gold/40 hover:text-admin-danger"
+                        )}
+                        title="Flag as Spam"
+                      >
+                        <AlertTriangle size={16} />
                       </button>
                     </div>
                   </td>
@@ -305,7 +338,11 @@ const AdminReviews: React.FC = () => {
 
               <div className="p-10 border-t border-admin-gold/10 flex items-center justify-between bg-black/40 backdrop-blur-xl">
                 <div className="flex gap-4">
-                  <button className="p-4 border border-admin-danger/20 text-admin-danger hover:bg-admin-danger/5 transition-all" title="Mark as Spam">
+                  <button 
+                    onClick={() => { updateStatus(selectedReview.id, 'Spam'); setSelectedReview(null); }}
+                    className="p-4 border border-admin-danger/20 text-admin-danger hover:bg-admin-danger/5 transition-all" 
+                    title="Mark as Spam"
+                  >
                     <AlertTriangle size={20} />
                   </button>
                   <button className="p-4 border border-admin-gold/20 text-admin-gold/40 hover:text-admin-gold transition-all" title="Delete Review">
@@ -313,10 +350,16 @@ const AdminReviews: React.FC = () => {
                   </button>
                 </div>
                 <div className="flex gap-4">
-                  <button className="px-10 py-5 border border-admin-gold/20 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-admin-gold/5 transition-all">
+                  <button 
+                    onClick={() => { updateStatus(selectedReview.id, 'Pending'); setSelectedReview(null); }}
+                    className="px-10 py-5 border border-admin-gold/20 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-admin-gold/5 transition-all"
+                  >
                     Reject
                   </button>
-                  <button className="px-12 py-5 bg-admin-gold text-admin-bg text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-admin-gold/90 transition-all shadow-[0_0_30px_rgba(201,168,76,0.3)]">
+                  <button 
+                    onClick={() => { updateStatus(selectedReview.id, 'Approved'); setSelectedReview(null); }}
+                    className="px-12 py-5 bg-admin-gold text-admin-bg text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-admin-gold/90 transition-all shadow-[0_0_30px_rgba(201,168,76,0.3)]"
+                  >
                     Approve & Reply
                   </button>
                 </div>
